@@ -1,0 +1,6 @@
+{
+  "name": "TechAssist AI",
+  "description": "Intelligent Technical Support & Troubleshooting Agent with step-by-step decision trees, knowledge base, and automated escalation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

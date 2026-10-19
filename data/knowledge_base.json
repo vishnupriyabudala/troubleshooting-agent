@@ -1,0 +1,538 @@
+[
+  {
+    "problemId": "wifi-no-internet",
+    "category": "Network",
+    "title": "Connected to Wi-Fi but No Internet Access",
+    "severity": "HIGH",
+    "symptoms": [
+      "Wi-Fi icon shows connected",
+      "Yellow exclamation mark or 'No Internet, Secured'",
+      "Websites fail to open with DNS_PROBE_FINISHED_NO_INTERNET",
+      "Network ping to external IPs times out"
+    ],
+    "possibleCauses": [
+      "Router or ISP gateway outage",
+      "Corrupted local DNS cache or invalid DNS server assignment",
+      "Stale DHCP IP lease or IP address conflict",
+      "Third-party VPN or antivirus network filtering hook blocking traffic"
+    ],
+    "initialQuestion": "Can another device (such as your phone or another laptop) connected to the SAME Wi-Fi network access websites?",
+    "initialOptions": ["YES", "NO"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Test internet connectivity on a second device connected to the identical Wi-Fi network.",
+        "question": "Can another device connected to the same Wi-Fi access the internet?",
+        "options": [
+          { "label": "YES", "nextNodeId": "check-dns-local", "summary": "Other devices work, confirming the issue is localized to this computer." },
+          { "label": "NO", "nextNodeId": "router-reboot-isp", "summary": "No devices have internet, pointing to a router, modem, or ISP outage." }
+        ]
+      },
+      "router-reboot-isp": {
+        "stepNumber": 2,
+        "instruction": "Power-cycle your Wi-Fi router and modem: Unplug the power cable from both devices, wait 30 full seconds, reconnect the modem first until solid green lights show, then reconnect the router.",
+        "question": "Did power cycling the router and modem restore internet access?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Router power cycle successfully cleared stalled routing tables and refreshed external ISP handshake." },
+          { "label": "NO", "nextNodeId": "check-modem-wan", "summary": "Router reboot did not restore connectivity." }
+        ]
+      },
+      "check-modem-wan": {
+        "stepNumber": 3,
+        "instruction": "Check the WAN / Internet LED indicator on your modem or fiber ONT. Is the Internet light red, orange, blinking rapidly, or completely off?",
+        "question": "Is the modem's Internet light red/unlit, indicating an ISP service interruption?",
+        "options": [
+          { "label": "YES", "isEscalation": true, "escalationReason": "Physical WAN signal loss detected at the modem level. ISP line technician or service provider dispatch required." },
+          { "label": "NO", "nextNodeId": "router-factory-or-support", "summary": "WAN indicator looks normal, but traffic is not routing." }
+        ]
+      },
+      "router-factory-or-support": {
+        "stepNumber": 4,
+        "instruction": "Check if your ISP account has an active billing lock or localized area maintenance outage via your mobile data app.",
+        "question": "Did your ISP report an active service outage or maintenance in your area?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Issue confirmed as scheduled ISP maintenance in your sector. Service will resume automatically upon ISP completion." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Unresolved router hardware or gateway firmware failure. Network engineering support requested." }
+        ]
+      },
+      "check-dns-local": {
+        "stepNumber": 2,
+        "instruction": "Flush your local DNS resolver and reset TCP/IP stack. Open Command Prompt (or Terminal) as Administrator and execute:\n1) ipconfig /flushdns\n2) netsh winsock reset\n3) Restart your laptop.",
+        "question": "After restarting your laptop, can you now load web pages?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Flushing stale DNS cache and resetting Winsock catalog resolved the network routing glitch." },
+          { "label": "NO", "nextNodeId": "check-custom-dns", "summary": "DNS cache flush did not resolve; testing DNS server configuration." }
+        ]
+      },
+      "check-custom-dns": {
+        "stepNumber": 3,
+        "instruction": "Manually configure reliable public DNS servers. Go to Network Adapter Settings > IPv4 Properties > Set Preferred DNS to 8.8.8.8 (Google) and Alternate DNS to 1.1.1.1 (Cloudflare).",
+        "question": "Did changing your DNS server to 8.8.8.8 allow websites to open?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Default ISP DNS server was failing or timing out. Switched to high-availability public DNS." },
+          { "label": "NO", "nextNodeId": "check-vpn-proxy", "summary": "Public DNS did not resolve; checking for proxy or VPN interception." }
+        ]
+      },
+      "check-vpn-proxy": {
+        "stepNumber": 4,
+        "instruction": "Temporarily disable any active VPN software, proxy servers, or third-party web filtering suites (e.g. NordVPN, Zscaler, Cloudflare WARP).",
+        "question": "Does disabling VPN/proxy restore immediate internet access?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "A disconnected or misconfigured VPN kill-switch was blocking all outbound traffic." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Local network adapter driver corruption or persistent routing table failure requires Tier 2 IT support escalation." }
+        ]
+      }
+    }
+  },
+  {
+    "problemId": "laptop-overheating",
+    "category": "Hardware",
+    "title": "Laptop Overheating & Fan Noise",
+    "severity": "HIGH",
+    "symptoms": [
+      "Laptop chassis feels extremely hot to touch",
+      "Cooling fans spinning constantly at maximum RPM",
+      "Sudden thermal shutdowns or freezes during normal tasks",
+      "CPU thermal throttling causing severe system lag"
+    ],
+    "possibleCauses": [
+      "Air intake vents or exhaust grills clogged with dust and lint",
+      "Laptop operated on soft surfaces (bed, couch, blanket) blocking airflow",
+      "High CPU/GPU utilization caused by background runaway processes or crypto malware",
+      "Degraded or dried thermal paste between CPU heat sink and die"
+    ],
+    "initialQuestion": "Is the laptop currently placed directly on a soft surface like a bed, blanket, or your lap, or is it on a hard, flat desk?",
+    "initialOptions": ["SOFT SURFACE", "HARD DESK"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Inspect laptop placement and airflow intake clearance.",
+        "question": "Is the laptop currently placed on a soft surface (bed/blanket/cushion) or on a hard flat desk?",
+        "options": [
+          { "label": "SOFT SURFACE", "nextNodeId": "move-to-hard-surface", "summary": "Laptop is on fabric or soft surface which traps heat and suffocates intake vents." },
+          { "label": "HARD DESK", "nextNodeId": "check-task-manager-cpu", "summary": "Placement is adequate; investigating thermal dust obstruction and processor load." }
+        ]
+      },
+      "move-to-hard-surface": {
+        "stepNumber": 2,
+        "instruction": "Move the laptop immediately to a clean, elevated hard flat surface. Elevate the rear feet with a book or stand by 1 inch to allow ambient air intake. Wait 10 minutes.",
+        "question": "Did moving to a hard surface and elevating the rear lower the fan noise and temperatures?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Intake airflow was restored. Operating laptops on soft bedding severely suffocates cooling vents." },
+          { "label": "NO", "nextNodeId": "check-task-manager-cpu", "summary": "Chassis remains hot even on desk; checking computational load." }
+        ]
+      },
+      "check-task-manager-cpu": {
+        "stepNumber": 3,
+        "instruction": "Open Task Manager (Ctrl + Shift + Esc or Activity Monitor on Mac). Sort processes by CPU usage. Is any unknown process consuming more than 40% CPU continuously?",
+        "question": "Is there a runaway process consuming unusually high CPU?",
+        "options": [
+          { "label": "YES", "nextNodeId": "terminate-runaway-process", "summary": "Identified high-utilization background process generating heat." },
+          { "label": "NO", "nextNodeId": "check-physical-dust", "summary": "CPU utilization is low/normal, meaning the thermal dissipation system is physically failing." }
+        ]
+      },
+      "terminate-runaway-process": {
+        "stepNumber": 4,
+        "instruction": "Select the heavy background process and click 'End Task'. If it is an unwanted software or browser tab, close or uninstall it.",
+        "question": "Did terminating that process cause temperatures and fan noise to decrease?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Rogue high-utilization background process terminated, restoring thermal equilibrium." },
+          { "label": "NO", "nextNodeId": "check-physical-dust", "summary": "System remains hot even with process terminated." }
+        ]
+      },
+      "check-physical-dust": {
+        "stepNumber": 5,
+        "instruction": "Power off the laptop and inspect the exhaust vents with a flashlight. Use a can of compressed air with short bursts to clear dust build-up from the fin stack.",
+        "question": "Did clearing dust from the ventilation ports solve the overheating issue?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Dust clumps in heat sink fins cleared, allowing unrestricted thermal exhaust." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Persistent overheating despite low CPU load and clear vents points to dried thermal paste or failed bearing cooling fan. Hardware technician required." }
+        ]
+      }
+    }
+  },
+  {
+    "problemId": "laptop-slow-performance",
+    "category": "Performance",
+    "title": "Slow Laptop Performance & System Freezing",
+    "severity": "MEDIUM",
+    "symptoms": [
+      "Applications take a very long time to open",
+      "Spinning circle/wheel cursor frequently appears",
+      "Typing or mouse movements lag",
+      "High RAM or 100% Disk usage in Task Manager"
+    ],
+    "possibleCauses": [
+      "Too many startup applications launching automatically",
+      "Low available RAM causing heavy virtual memory disk swapping",
+      "Mechanical HDD operating at 100% active time",
+      "Corrupted Windows search indexer or temporary cache bloat"
+    ],
+    "initialQuestion": "Does the laptop run slowly immediately upon booting up, or only after you open multiple applications?",
+    "initialOptions": ["RIGHT FROM BOOT", "AFTER OPENING APPS"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Assess whether the bottleneck is boot/startup background bloat or resource exhaustion during multitasking.",
+        "question": "Does the slowdown occur immediately at startup or only after launching several programs?",
+        "options": [
+          { "label": "RIGHT FROM BOOT", "nextNodeId": "check-startup-apps", "summary": "Slowness at startup indicates startup bloat or background services." },
+          { "label": "AFTER OPENING APPS", "nextNodeId": "check-ram-capacity", "summary": "Slowness during multitasking indicates RAM or VRAM exhaustion." }
+        ]
+      },
+      "check-startup-apps": {
+        "stepNumber": 2,
+        "instruction": "Press Ctrl + Shift + Esc > Navigate to the 'Startup Apps' tab. Disable heavy third-party startup items (Discord, Spotify, Steam, Updaters). Restart your computer.",
+        "question": "Did disabling non-essential startup apps improve boot time and responsiveness?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Disabled unnecessary background startup hooks, freeing CPU and disk I/O at launch." },
+          { "label": "NO", "nextNodeId": "check-disk-usage-100", "summary": "Startup items disabled, but system remains sluggish." }
+        ]
+      },
+      "check-disk-usage-100": {
+        "stepNumber": 3,
+        "instruction": "Open Task Manager > Performance tab > Click 'Disk'. Is the Active Time pegged at or near 100% even when idle?",
+        "question": "Is Disk Active Time stuck at 100%?",
+        "options": [
+          { "label": "YES", "nextNodeId": "disable-sysmain", "summary": "Identified 100% Disk Active Time bottleneck." },
+          { "label": "NO", "nextNodeId": "run-disk-cleanup", "summary": "Disk utilization normal; cleaning temp files and verifying integrity." }
+        ]
+      },
+      "disable-sysmain": {
+        "stepNumber": 4,
+        "instruction": "Disable the SysMain (Superfetch) service: Press Win + R, type 'services.msc', find 'SysMain', right-click > Stop, and set Startup type to Disabled.",
+        "question": "Did stopping SysMain drop the disk usage and speed up the system?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "SysMain aggressive prefetching was saturating disk read queues. Service disabled successfully." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Persistent 100% disk usage often indicates imminent storage drive failure (bad sectors) or need for SSD upgrade." }
+        ]
+      },
+      "check-ram-capacity": {
+        "stepNumber": 2,
+        "instruction": "Check RAM usage in Task Manager. If Memory is exceeding 85%, close unused browser tabs (especially media tabs) and background helper tools.",
+        "question": "Did closing excess browser tabs reduce memory pressure and restore responsiveness?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "System was swapping active memory pages to disk pagefile due to high RAM utilization. Closing background tabs restored memory." },
+          { "label": "NO", "nextNodeId": "run-disk-cleanup", "summary": "Memory is within bounds; scanning file system." }
+        ]
+      },
+      "run-disk-cleanup": {
+        "stepNumber": 3,
+        "instruction": "Run Windows Disk Cleanup (or clean temp files) and run 'sfc /scannow' in an Administrator Command Prompt to fix corrupt system binaries.",
+        "question": "Did system file repair and temp file purge resolve the lag?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Corrupt Windows system files repaired and system cache cleared." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Hardware degradation or operating system profile corruption detected. IT support ticket required." }
+        ]
+      }
+    }
+  },
+  {
+    "problemId": "browser-crashes",
+    "category": "Browser",
+    "title": "Web Browser Crashing or Closing Unexpectedly",
+    "severity": "MEDIUM",
+    "symptoms": [
+      "Browser closes abruptly without error message",
+      "'Aw, Snap!' or 'Out of Memory' crash screens",
+      "Browser freezes when playing video or scrolling heavy web pages",
+      "Tabs reload continuously"
+    ],
+    "possibleCauses": [
+      "Conflict with corrupted browser extensions (ad blockers, security extensions)",
+      "Corrupted browser profile, cache, or cookies database",
+      "Incompatible GPU hardware acceleration driver",
+      "Outdated browser build with unpatched memory leak"
+    ],
+    "initialQuestion": "Does the crash still happen if you open the browser in Incognito or Private Browsing mode?",
+    "initialOptions": ["YES", "NO"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Launch your browser in Incognito / Private window (Ctrl + Shift + N in Chrome/Edge, Ctrl + Shift + P in Firefox).",
+        "question": "Does the browser work normally without crashing in Incognito / Private mode?",
+        "options": [
+          { "label": "YES", "nextNodeId": "disable-extensions", "summary": "Incognito disables extensions, proving an extension is triggering the crash." },
+          { "label": "NO", "nextNodeId": "disable-hardware-acceleration", "summary": "Crashing persists in Incognito, indicating core browser or GPU rendering conflict." }
+        ]
+      },
+      "disable-extensions": {
+        "stepNumber": 2,
+        "instruction": "Open your browser's Extension manager (e.g. chrome://extensions). Toggle off all extensions, then re-enable them one by one to isolate the culprit.",
+        "question": "Did disabling extensions stop the crashes?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Identified and eliminated incompatible or malicious browser extension causing crash." },
+          { "label": "NO", "nextNodeId": "clear-browser-cache", "summary": "Extensions were not the only cause; clearing cached data." }
+        ]
+      },
+      "disable-hardware-acceleration": {
+        "stepNumber": 2,
+        "instruction": "Go to Browser Settings > System > Disable 'Use graphics acceleration when available' (or Hardware Acceleration). Relaunch the browser.",
+        "question": "Did turning off hardware acceleration prevent the crashes?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "GPU graphics driver conflict resolved by delegating web rendering to software mode." },
+          { "label": "NO", "nextNodeId": "clear-browser-cache", "summary": "Hardware acceleration was not the cause; proceeding to profile reset." }
+        ]
+      },
+      "clear-browser-cache": {
+        "stepNumber": 3,
+        "instruction": "Clear browsing data: Press Ctrl + Shift + Delete, select 'All time', check Cookies and Cached images and files, then click Clear Data.",
+        "question": "Did clearing cached web data resolve the issue?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Corrupt cached JavaScript or cookie database cleared." },
+          { "label": "NO", "nextNodeId": "reinstall-browser", "summary": "Core browser binaries or profile database corrupted." }
+        ]
+      },
+      "reinstall-browser": {
+        "stepNumber": 4,
+        "instruction": "Export your bookmarks, uninstall the browser completely, download the latest official installer, and reinstall cleanly.",
+        "question": "Did a clean browser reinstall solve the crashing?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Fresh installation replaced corrupted installation files." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "System-wide DLL conflict, RAM bit flip, or security software injection crash. Technical support review needed." }
+        ]
+      }
+    }
+  },
+  {
+    "problemId": "printer-failure",
+    "category": "Printer",
+    "title": "Printer Connected but Not Printing",
+    "severity": "MEDIUM",
+    "symptoms": [
+      "Printer status displays 'Offline' or 'Error - Printing'",
+      "Print jobs stuck indefinitely in print queue",
+      "Printer receives job but spits out blank page or blinking light",
+      "Network printer unreachable via IP address"
+    ],
+    "possibleCauses": [
+      "Windows Print Spooler service halted or jammed with corrupted spool file",
+      "Stale IP address assignment on wireless printer",
+      "Outdated or generic driver causing communication breakdown",
+      "Hardware paper feed sensor or ink cartridge communication fault"
+    ],
+    "initialQuestion": "Is the printer connected via USB cable directly to your computer, or wirelessly over your Wi-Fi network?",
+    "initialOptions": ["WI-FI / NETWORK", "USB CABLE"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Determine the printer interface connection method.",
+        "question": "Is the printer connected via Wi-Fi network or USB cable?",
+        "options": [
+          { "label": "WI-FI / NETWORK", "nextNodeId": "check-printer-ip", "summary": "Wireless printer connection path selected." },
+          { "label": "USB CABLE", "nextNodeId": "check-usb-port", "summary": "Direct USB hardware connection path selected." }
+        ]
+      },
+      "check-printer-ip": {
+        "stepNumber": 2,
+        "instruction": "Check the printer's screen or print a Network Configuration page. Verify the printer has an active IP address on your home subnet (e.g. 192.168.1.X).",
+        "question": "Does the printer have a valid IP address and show connected to Wi-Fi?",
+        "options": [
+          { "label": "YES", "nextNodeId": "restart-print-spooler", "summary": "Printer is on network; problem is with local queue or spooler." },
+          { "label": "NO", "nextNodeId": "reconnect-printer-wifi", "summary": "Printer has dropped from the Wi-Fi network." }
+        ]
+      },
+      "reconnect-printer-wifi": {
+        "stepNumber": 3,
+        "instruction": "On the printer control panel, run the Wireless Setup Wizard to re-enter your Wi-Fi SSID and password. Ensure it connects to 2.4 GHz if required.",
+        "question": "Did reconnecting the printer to Wi-Fi allow the test page to print?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Printer was reconnected to the wireless access point with valid DHCP lease." },
+          { "label": "NO", "nextNodeId": "restart-print-spooler", "summary": "Wireless connection restored but print jobs still not processing." }
+        ]
+      },
+      "check-usb-port": {
+        "stepNumber": 2,
+        "instruction": "Unplug the USB cable from both ends. Plug it into a different USB port directly on your computer (avoid unpowered USB hubs).",
+        "question": "Did reconnecting to a different USB port resolve the issue?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Faulty USB port or hub connection bypassed." },
+          { "label": "NO", "nextNodeId": "restart-print-spooler", "summary": "Hardware connection verified; checking Windows print spooler." }
+        ]
+      },
+      "restart-print-spooler": {
+        "stepNumber": 3,
+        "instruction": "Reset the Print Spooler: Open Command Prompt as Admin and run:\n1) net stop spooler\n2) del /Q /F /S \"%systemroot%\\System32\\Spool\\Printers\\*.*\"\n3) net start spooler",
+        "question": "Did clearing stuck print jobs and restarting the Print Spooler allow you to print?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Corrupted print queue cleared and Print Spooler daemon successfully restarted." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Printer driver corruption or hardware firmware failure requires manufacturer driver reinstallation or support dispatch." }
+        ]
+      }
+    }
+  },
+  {
+    "problemId": "software-crashes",
+    "category": "Software",
+    "title": "Application Crashing or Won't Open",
+    "severity": "MEDIUM",
+    "symptoms": [
+      "Application crashes on launch with error dialog",
+      "Missing .dll file error (e.g. VCRUNTIME140.dll, MSVCP140.dll)",
+      "Program window flashes briefly then terminates",
+      "Application hung with 'Not Responding' status"
+    ],
+    "possibleCauses": [
+      "Missing or corrupted Microsoft Visual C++ Redistributable runtime libraries",
+      "Corrupted application configuration file or registry keys",
+      "Security software quarantine or permissions limitation",
+      "Windows Compatibility mode mismatch"
+    ],
+    "initialQuestion": "Does the application show a specific error message (such as a missing DLL or error code) when it crashes?",
+    "initialOptions": ["YES, ERROR SHOWN", "NO, JUST DISAPPEARS"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Identify crash behavior and error messaging.",
+        "question": "Does the app display a specific error code or DLL error, or does it close silently?",
+        "options": [
+          { "label": "YES, ERROR SHOWN", "nextNodeId": "check-vc-redist", "summary": "Explicit error code or DLL reported." },
+          { "label": "NO, JUST DISAPPEARS", "nextNodeId": "run-as-admin-compat", "summary": "Silent crash indicating permission or execution policy failure." }
+        ]
+      },
+      "check-vc-redist": {
+        "stepNumber": 2,
+        "instruction": "If the error mentions a DLL like VCRUNTIME, MSVCP, or DirectX: Download and install the latest all-in-one Microsoft Visual C++ Redistributable (x86 and x64) from official Microsoft support.",
+        "question": "Did installing the Visual C++ Redistributables fix the launch error?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Missing shared C++ runtime dependencies installed." },
+          { "label": "NO", "nextNodeId": "run-as-admin-compat", "summary": "Dependencies present; checking execution rights." }
+        ]
+      },
+      "run-as-admin-compat": {
+        "stepNumber": 3,
+        "instruction": "Right-click the application executable or shortcut > select 'Run as Administrator'. Alternatively, right-click > Properties > Compatibility > check 'Run this program in compatibility mode for Windows 10'.",
+        "question": "Does running as administrator or in compatibility mode allow the app to run?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Elevated administrator privileges or legacy compatibility layer bypassed execution hurdle." },
+          { "label": "NO", "nextNodeId": "reinstall-app-clean", "summary": "Application configuration files or binaries corrupted." }
+        ]
+      },
+      "reinstall-app-clean": {
+        "stepNumber": 4,
+        "instruction": "Perform a clean reinstall: Uninstall the software, delete its leftover folder in %AppData% and %LocalAppData%, then install the latest stable version.",
+        "question": "Did a clean reinstallation resolve the application crash?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Corrupted application state and user profile settings cleared by fresh installation." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Unresolved software conflict or crash dump requires software engineering / IT application specialist." }
+        ]
+      }
+    }
+  },
+  {
+    "problemId": "os-bsod-boot",
+    "category": "Operating System",
+    "title": "Blue Screen (BSOD) or Boot Loop",
+    "severity": "CRITICAL",
+    "symptoms": [
+      "Blue Screen with Stop Code (CRITICAL_PROCESS_DIED, IRQL_NOT_LESS_OR_EQUAL, KERNEL_DATA_INPAGE_ERROR)",
+      "System reboots into Automatic Repair loop",
+      "Stuck on manufacturer logo during boot",
+      "Windows failed update undoing changes"
+    ],
+    "possibleCauses": [
+      "Faulty device driver update (graphics, audio, or chipset)",
+      "Corrupted Windows BCD (Boot Configuration Data) or MBR",
+      "Failing memory module (RAM) or bad sectors on boot SSD",
+      "Recent incompatible Windows Cumulative Update"
+    ],
+    "initialQuestion": "Can the computer currently boot into Windows or Safe Mode, or is it stuck in a reboot loop before reaching the desktop?",
+    "initialOptions": ["CAN BOOT / SAFE MODE", "STUCK IN LOOP"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Determine boot state accessibility.",
+        "question": "Can you reach Windows desktop or Safe Mode, or does it crash before Windows loads?",
+        "options": [
+          { "label": "CAN BOOT / SAFE MODE", "nextNodeId": "run-sfc-dism", "summary": "Desktop or Safe Mode accessible for diagnostics." },
+          { "label": "STUCK IN LOOP", "nextNodeId": "windows-recovery-env", "summary": "Pre-boot failure requiring Windows Recovery Environment (WinRE)." }
+        ]
+      },
+      "run-sfc-dism": {
+        "stepNumber": 2,
+        "instruction": "Run system file and component store repair. Open Command Prompt as Administrator:\n1) DISM.exe /Online /Cleanup-image /Restorehealth\n2) sfc /scannow\nRestart your computer when finished.",
+        "question": "Did DISM and SFC repair corrupted system files and stop the Blue Screens?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Corrupted kernel binaries and protected system components repaired via DISM and SFC." },
+          { "label": "NO", "nextNodeId": "rollback-driver-update", "summary": "Blue screen persists; checking recent driver or Windows updates." }
+        ]
+      },
+      "rollback-driver-update": {
+        "stepNumber": 3,
+        "instruction": "Roll back recent drivers or uninstall recent Windows Update: Go to Settings > Windows Update > Update History > Uninstall updates, or roll back your display driver in Device Manager.",
+        "question": "Did rolling back the recent update or driver restore system stability?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Problematic recent driver/update removed, restoring stable OS state." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Potential RAM hardware fault or catastrophic file system corruption. Critical hardware diagnostics required." }
+        ]
+      },
+      "windows-recovery-env": {
+        "stepNumber": 2,
+        "instruction": "In the Automatic Repair screen, select Advanced Options > Troubleshoot > Advanced Options > Startup Repair.",
+        "question": "Did Windows Startup Repair successfully diagnose and repair the boot loader?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Windows Startup Repair regenerated valid boot partition entries." },
+          { "label": "NO", "nextNodeId": "system-restore-point", "summary": "Startup repair could not fix boot loader." }
+        ]
+      },
+      "system-restore-point": {
+        "stepNumber": 3,
+        "instruction": "In Advanced Options, click 'System Restore' and select a restore point dated before the issue started.",
+        "question": "Did restoring to an earlier System Restore point restore normal booting?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "System configuration restored to previous known-good snapshot." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Unrecoverable boot corruption or failing storage controller. Tier 3 Enterprise support ticket required." }
+        ]
+      }
+    }
+  },
+  {
+    "problemId": "storage-full",
+    "category": "Storage",
+    "title": "Low Disk Space or Drive Full Warnings",
+    "severity": "LOW",
+    "symptoms": [
+      "'Low Disk Space' notification warning on C: drive",
+      "Unable to install software or download files",
+      "System updates failing due to insufficient space",
+      "Red storage bar in File Explorer"
+    ],
+    "possibleCauses": [
+      "Accumulated Windows Update delivery optimization and temporary files",
+      "Uncleaned Recycle Bin and browser cache",
+      "Large hidden sleep/hibernation file (hiberfil.sys)",
+      "Unused bulky applications and games"
+    ],
+    "initialQuestion": "Do you need urgent space right away to install an update or file, or are you looking to clean up gigabytes permanently?",
+    "initialOptions": ["URGENT QUICK CLEANUP", "COMPREHENSIVE AUDIT"],
+    "nodes": {
+      "start": {
+        "stepNumber": 1,
+        "instruction": "Initiate disk storage analysis and cleanup plan.",
+        "question": "Do you want to run quick automatic cleanup or identify large hidden folders?",
+        "options": [
+          { "label": "URGENT QUICK CLEANUP", "nextNodeId": "run-cleanmgr-admin", "summary": "Quick automated purge of temp files and update leftovers." },
+          { "label": "COMPREHENSIVE AUDIT", "nextNodeId": "storage-sense-audit", "summary": "Full inspection of installed apps, large downloads, and hibernation file." }
+        ]
+      },
+      "run-cleanmgr-admin": {
+        "stepNumber": 2,
+        "instruction": "Press Win + R, type 'cleanmgr', select C: drive, click 'Clean up system files'. Check 'Previous Windows installation(s)', 'Temporary Windows installation files', and 'Recycle Bin'. Click OK.",
+        "question": "Did running system file cleanup free up adequate space (several GBs)?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Purged obsolete OS installation cache, delivery optimization cache, and Recycle Bin." },
+          { "label": "NO", "nextNodeId": "storage-sense-audit", "summary": "Disk remains full; auditing large personal files and apps." }
+        ]
+      },
+      "storage-sense-audit": {
+        "stepNumber": 3,
+        "instruction": "Go to Windows Settings > System > Storage. Enable 'Storage Sense'. Click 'Installed apps' to sort by size and uninstall apps you no longer use.",
+        "question": "Did uninstalling large unused apps and enabling Storage Sense resolve the storage warning?",
+        "options": [
+          { "label": "YES", "isResolution": true, "resolutionText": "Unused bulky applications uninstalled and automated Storage Sense cleaning enabled." },
+          { "label": "NO", "isEscalation": true, "escalationReason": "Physical storage capacity is exhausted for user workload. SSD storage expansion or cloud archiving required." }
+        ]
+      }
+    }
+  }
+]
